@@ -1,0 +1,77 @@
+# Omics Command Collection – Practical One-liners for Transcriptome / Genome Work
+# Mostly for Trinity assemblies, read prep, BLAST filtering, and basic alignment handling
+# Tested on Linux/HPC – adapt paths/names as needed
+
+## grep – Quick searches in FASTA/FASTQ files
+
+# Pull out just the headers from a Trinity assembly
+grep ">" Trinity.fasta > Trinity_headers.txt
+
+# Count how many sequences are in your FASTA file (super common check)
+grep -c ">" Trinity.fasta
+# or for gzipped: zcat Trinity.fasta.gz | grep -c ">"
+
+## sed – Simple header fixes and replacements
+
+# Change old-style '@' read names to '>' (sometimes needed for older FASTA files)
+sed -e 's/@/>/g' Assembly.fasta > Assembly_fixed.fasta
+
+## cat – Combining assemblies or read files
+
+# Merge several FASTA files into one (e.g., multiple assemblies or chunks)
+cat *.fasta > combined_all.fasta
+# or specific ones: cat sample1.fasta sample2.fasta > merged.fasta
+
+## awk – Filtering tab-delimited files (BLAST, feature tables, etc.)
+
+# Keep only BLAST hits (outfmt 6) with >70% identity
+awk '$3 > 70' blast_results.outfmt6 > good_hits_only.outfmt6
+
+# Bonus: also require alignment length > 100 bp
+awk '$3 > 70 && $4 > 100' blast_results.outfmt6 > best_hits.outfmt6
+
+## sort + uniq – Cleaning up lists of names/IDs
+
+# Remove duplicate lines from a list (e.g., gene IDs)
+sort sample.txt | uniq > sample_unique.txt
+
+# See which ones were duplicated and how often
+sort sample.txt | uniq -c | sort -nr
+
+## Extracting specific sequences from a large FASTA (e.g., interesting genes from Trinity)
+
+### Method 1: Classic way with grep/sed (no extra tools needed)
+
+# Step 1: Flatten multi-line FASTA to one line per sequence
+# (Trinity headers start with TRINITY, so we use that to split)
+tr "\n" "\t" < Trinity.fasta | sed 's/>TRINITY/\n>TRINITY/g' > Trinity.flat.txt
+
+# Step 2: Pull out sequences matching your list of IDs
+# (query_ids.txt should have one ID per line, e.g. TRINITY_DN12345_c0_g1_i1)
+for x in $(cat query_ids.txt); do
+  grep -A 1 "$x" Trinity.flat.txt | sed 's/\t/\n/g' >> selected.fasta
+done
+
+# Step 3: (optional) Clean up headers to keep only first two fields
+cut -d ' ' -f 1-2 selected.fasta > selected_clean.fasta
+
+### Method 2: Much easier with seqtk (strongly recommended)
+
+# Install: conda install -c bioconda seqtk   (or module load on HPC)
+seqtk subseq Assembly.fasta query_ids.txt > selected_sequences.fasta
+
+# That's it – fast, preserves original formatting, handles huge files well
+
+## samtools – Basic SAM/BAM handling (after alignment, e.g. HISAT2/STAR)
+
+# Convert SAM → BAM (binary, compressed, indexed-friendly)
+samtools view -bS Sample.sam > Sample.bam
+
+# Sort BAM by coordinate (required for many downstream tools)
+samtools sort Sample.bam -o Sample.sorted.bam
+
+# Quick stats: how many reads mapped, paired, duplicate, etc.
+samtools flagstat Sample.sorted.bam
+
+# Bonus: index the sorted BAM so IGV/samtools view can jump around
+samtools index Sample.sorted.bam
