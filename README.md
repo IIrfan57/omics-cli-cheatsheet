@@ -12,7 +12,8 @@ The commands are intended for use on **Linux** or **HPC** environments and can b
 - **awk** – advanced text processing and filtering  
 - **cat** – concatenating and merging files  
 - **sort** and **uniq** – sorting and removing duplicates  
-- **seqtk** – FASTA/FASTQ manipulation  
+- **seqtk** – FASTA/FASTQ manipulation
+- **samtools** – SAM/BAM file handling for alignments
 
 These lightweight, widely available tools are extremely useful for preprocessing sequencing data, cleaning files, filtering sequences, renaming headers, subsampling reads, and preparing input for genome assemblers.
 
