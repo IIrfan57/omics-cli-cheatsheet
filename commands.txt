@@ -75,3 +75,21 @@ samtools flagstat Sample.sorted.bam
 
 # Bonus: index the sorted BAM so IGV/samtools view can jump around
 samtools index Sample.sorted.bam
+
+## More everyday samtools for RNA-seq alignments
+
+# View header only (check what reference was used, etc.)
+samtools view -H Sample.sorted.bam
+
+# Count mapped vs unmapped reads (quick QC)
+samtools flagstat Sample.sorted.bam
+
+# Extract reads mapping to a specific contig/transcript (e.g., check a gene of interest)
+samtools view Sample.sorted.bam "TRINITY_DN12345_c0_g1" > gene_hits.sam
+
+# Subset BAM to only properly paired reads (common RNA-seq filter)
+samtools view -b -f 2 Sample.sorted.bam > properly_paired.bam
+
+# Merge multiple BAMs (e.g., from replicates before counting)
+samtools merge merged.bam rep1.sorted.bam rep2.sorted.bam rep3.sorted.bam
+samtools index merged.bam
